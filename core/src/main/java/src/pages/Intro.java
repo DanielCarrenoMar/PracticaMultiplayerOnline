@@ -34,11 +34,11 @@ public class Intro implements Screen {
     @Override
     public void render(float delta) {
         AnyKeyDowm();
+        timer += delta;
 
         ScreenUtils.clear(0f, 0f, 0f, 1f);
         main.stage.act();
         main.stage.draw();
-        timer += delta;
 
         if (logo.getColor().a < 1) {
             float progress = Math.min(timer / 4, 1);
