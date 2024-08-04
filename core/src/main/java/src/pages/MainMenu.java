@@ -1,5 +1,6 @@
 package src.pages;
 
+import com.badlogic.gdx.utils.ScreenUtils;
 import src.app.Main;
 
 import com.badlogic.gdx.Screen;
@@ -17,7 +18,7 @@ public class MainMenu implements Screen {
 
     @Override
     public void render(float delta) {
-
+        ScreenUtils.clear(0.15f, 0.15f, 0.4f, 1f);
     }
 
     @Override
