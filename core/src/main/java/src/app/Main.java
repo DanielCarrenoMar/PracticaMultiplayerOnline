@@ -1,19 +1,17 @@
 package src.app;
 
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import src.net.Server;
 import src.pages.*;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,6 +22,7 @@ public class Main extends Game {
     public ShapeRenderer shapeRenderer;
     public Skin skin;
     public Stage stage;
+    private Viewport viewport;
     private Screen[] pages;
 
     private final ExecutorService serverThread = Executors.newSingleThreadExecutor();;
@@ -31,17 +30,20 @@ public class Main extends Game {
 
     @Override
     public void create() {
+        Gdx.graphics.setWindowedMode(1080, 720);
+        Gdx.graphics.setTitle("CubiTz");
+
         shapeRenderer = new ShapeRenderer();
         batch = new SpriteBatch();
+        skin = new Skin(Gdx.files.internal("./assets/ui/uiskin.json"));
+        viewport = new FitViewport(1080, 720);
+        stage = new Stage(viewport);
 
-        stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        skin = new Skin(Gdx.files.internal("./assets/ui/uiskin.json"));
-
         pages = new Screen[]{
-            new Intro(),
-            new MainMenu()
+            new Intro(this),
+            new MainMenu(this)
         };
         this.setScreen(pages[0]);
     }
@@ -49,6 +51,11 @@ public class Main extends Game {
     @Override
     public void render() {
         super.render();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height);
     }
 
     @Override
