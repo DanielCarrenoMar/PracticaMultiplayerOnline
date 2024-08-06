@@ -10,12 +10,12 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.ScreenUtils;
 import src.utils.Animation;
 
-public class Intro implements Screen {
+public class IntroScreen implements Screen {
     Main main;
     Image logo;
     Float timer = 0f;
 
-    public Intro(Main main) {
+    public IntroScreen(Main main) {
         this.main = main;
         Texture texture = new Texture("CubiTz.png");
         texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);

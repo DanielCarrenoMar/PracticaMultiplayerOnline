@@ -1,8 +1,8 @@
 package src.app;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import src.net.Server;
 import src.pages.*;
 
 import com.badlogic.gdx.Game;
@@ -12,8 +12,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game {
@@ -24,13 +22,14 @@ public class Main extends Game {
     private Viewport viewport;
     private Screen[] pages;
 
-    private final ExecutorService serverThread = Executors.newSingleThreadExecutor();;
-    private Server server = null;
+    public static Texture playerTexture;
 
     @Override
     public void create() {
         Gdx.graphics.setWindowedMode(1080, 720);
         Gdx.graphics.setTitle("CubiTz");
+
+        Main.playerTexture = new Texture("sprites/player/playerState.png");
 
         shapeRenderer = new ShapeRenderer();
         batch = new SpriteBatch();
@@ -41,8 +40,9 @@ public class Main extends Game {
         Gdx.input.setInputProcessor(stage);
 
         pages = new Screen[]{
-            new Intro(this),
-            new MenuMain(this)
+            new IntroScreen(this),
+            new MenuScreen(this),
+            new GameScreen(this)
         };
         this.setScreen(pages[1]);
     }
@@ -72,14 +72,16 @@ public class Main extends Game {
         }
     }
 
-    public void changePage(Integer page) {
-        this.setScreen(pages[page]);
+    public Screen getPage(String page) {
+        for (Screen p : pages) {
+            if (p.getClass().getSimpleName().equals(page)) {
+                return p;
+            }
+        }
+        return null;
     }
 
-    public void startServer() {
-        if (server == null) {
-            server = new Server(1234);
-            serverThread.execute(server);
-        }
+    public void changePage(Integer page) {
+        this.setScreen(pages[page]);
     }
 }
