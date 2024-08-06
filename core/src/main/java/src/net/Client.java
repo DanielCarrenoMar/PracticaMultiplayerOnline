@@ -19,7 +19,7 @@ public class Client implements Runnable{
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private GameScreen game;
+    private final GameScreen game;
 
     public Client(GameScreen game,String ip, Integer port) {
         this.ip = ip;
@@ -41,31 +41,34 @@ public class Client implements Runnable{
             while (running) {
                 Object[] data = (Object[]) in.readObject();
                 String type = (String) data[0];
-                if (type.equals("newEntity")) {
-                    String typeId = (String) data[1];
-                    Integer id = (Integer) data[2];
+                switch (type) {
+                    case "newEntity" -> {
+                        String typeId = (String) data[1];
+                        Integer id = (Integer) data[2];
 
-                    Entity entity = EntityFactory.createEntity(typeId);
-                    if (entity == null) return;
-                    entity.setId(id);
-                    game.entityManager.addEntity(entity);
-                }
-                else if (type.equals("setPosEntity")) {
-                    String typeID = (String) data[1];
-                    Integer id = (Integer) data[2];
-                    Float x = (Float) data[3];
-                    Float y = (Float) data[4];
+                        Entity entity = EntityFactory.createEntity(typeId);
+                        if (entity == null) return;
+                        entity.setId(id);
+                        game.entityManager.addEntity(entity);
+                    }
+                    case "setPosEntity" -> {
+                        String typeID = (String) data[1];
+                        Integer id = (Integer) data[2];
+                        Float x = (Float) data[3];
+                        Float y = (Float) data[4];
 
-                    game.entityManager.setPosEntity(typeID ,id, x, y);
-                }
-                else if (type.equals("disconnect")) {
-                    System.out.println("CLIENT jugador desconectado");
-                    Integer id = (Integer) data[1];
-                    game.entityManager.removeEntity("player", id);
-                } else if (type.equals("serverClose")) {
-                    System.out.println("CLIENT Servidor cerrado");
-                    running = false;
-                    socket.close();
+                        game.entityManager.setPosEntity(typeID, id, x, y);
+                    }
+                    case "disconnect" -> {
+                        System.out.println("CLIENT jugador desconectado");
+                        Integer id = (Integer) data[1];
+                        game.entityManager.removeEntity("player", id);
+                    }
+                    case "serverClose" -> {
+                        System.out.println("CLIENT Servidor cerrado");
+                        running = false;
+                        socket.close();
+                    }
                 }
 
             }

@@ -6,7 +6,7 @@ import src.entities.*;
 import java.util.ArrayList;
 
 public class EntityManager {
-    private final ArrayList<Entity> entities = new ArrayList<Entity>();
+    private final ArrayList<Entity> entities = new ArrayList<>();
 
     public EntityManager() {
     }

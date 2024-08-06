@@ -25,7 +25,7 @@ public class Server implements Runnable{
     private final ExecutorService pool = Executors.newFixedThreadPool(10);
 
     public static EntityManager entityManager = new EntityManager();
-    public static ArrayList<User> users = new ArrayList<User>();
+    private static final ArrayList<User> users = new ArrayList<User>();
 
     public Server(Integer port) {
         this.port = port;
@@ -60,6 +60,7 @@ public class Server implements Runnable{
     }
 
     public void close(){
+        running = false;
         try {
             for (User user : users) {
                 user.running = false;
@@ -73,16 +74,13 @@ public class Server implements Runnable{
     }
 
     private class User implements Runnable{
-        private Socket socket;
-        private Server server;
-        private Integer id;
+        private final Socket socket;
+        private final Integer id;
         private Boolean running = true;
-        private ObjectInputStream in;
         private ObjectOutputStream out;
 
         private User(Socket socket, Integer id) {
             this.socket = socket;
-            this.server = server;
             this.id = id;
         }
 
@@ -90,48 +88,50 @@ public class Server implements Runnable{
         public void run() {
             System.out.println("SERVER Nuevo usuario conectado " + id);
             try {
-                in = new ObjectInputStream(socket.getInputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                 out = new ObjectOutputStream(socket.getOutputStream());
                 while (running) {
                     Object[] data = (Object[]) in.readObject();
                     String type = (String) data[0];
-                    if (type.equals("connect")){
-                        String name = (String) data[1];
-                        Float X = (Float) data[2];
-                        Float Y = (Float) data[3];
-                        Player newPlayer = (Player) EntityFactory.createEntity("player");
-                        if (newPlayer == null) return;
-                        newPlayer.setName(name);
-                        newPlayer.setId(id);
-                        newPlayer.setPos(X, Y);
+                    switch (type) {
+                        case "connect" -> {
+                            String name = (String) data[1];
+                            Float X = (Float) data[2];
+                            Float Y = (Float) data[3];
+                            Player newPlayer = (Player) EntityFactory.createEntity("player");
+                            if (newPlayer == null) return;
+                            newPlayer.setName(name);
+                            newPlayer.setId(id);
+                            newPlayer.setPos(X, Y);
 
-                        ArrayList<Entity> entities = entityManager.getEntities();
-                        if (entities != null) {
-                            for (Entity entity : entityManager.getEntities()) {
-                                System.out.println("SERVER Enviando entidad + " + entity.typeId + " " + entity.id);
-                                send(Packet.newEntity(entity.typeId, entity.id));
-                                send(Packet.setPosEntity(entity.typeId, entity.id, entity.X, entity.Y));
+                            ArrayList<Entity> entities = entityManager.getEntities();
+                            if (entities != null) {
+                                for (Entity entity : entityManager.getEntities()) {
+                                    System.out.println("SERVER Enviando entidad + " + entity.typeId + " " + entity.id);
+                                    send(Packet.newEntity(entity.typeId, entity.id));
+                                    send(Packet.setPosEntity(entity.typeId, entity.id, entity.X, entity.Y));
+                                }
                             }
+
+                            sendAll(Packet.newEntity(newPlayer.typeId, newPlayer.id), id);
+                            sendAll(Packet.setPosEntity(newPlayer.typeId, newPlayer.id, newPlayer.X, newPlayer.Y), id);
+                            entityManager.addEntity(newPlayer);
                         }
+                        case "disconnect" -> {
+                            System.out.println("SERVER Usuario desconectado " + id);
+                            sendAll(Packet.disconnect(id), id);
+                            entityManager.removeEntity("player", id);
+                            running = false;
+                            users.remove(this);
+                        }
+                        case "setPosEntity" -> {
+                            String typeId = (String) data[1];
+                            Float X = (Float) data[3];
+                            Float Y = (Float) data[4];
+                            entityManager.setPosEntity(typeId, id, X, Y);
 
-                        sendAll(Packet.newEntity(newPlayer.typeId, newPlayer.id), id);
-                        sendAll(Packet.setPosEntity(newPlayer.typeId, newPlayer.id, newPlayer.X, newPlayer.Y), id);
-                        entityManager.addEntity(newPlayer);
-                    }
-                    else if (type.equals("disconnect")){
-                        System.out.println("SERVER Usuario desconectado " + id);
-                        sendAll(Packet.disconnect(id), id);
-                        entityManager.removeEntity("player",id);
-                        running = false;
-                        users.remove(this);
-                    }
-                    else if (type.equals("setPosEntity")){
-                        String typeId = (String) data[1];
-                        Float X = (Float) data[3];
-                        Float Y = (Float) data[4];
-                        entityManager.setPosEntity(typeId,id, X, Y);
-
-                        sendAll(Packet.setPosEntity(typeId, id, X, Y), id);
+                            sendAll(Packet.setPosEntity(typeId, id, X, Y), id);
+                        }
                     }
 
                 }
