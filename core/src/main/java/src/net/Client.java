@@ -46,7 +46,7 @@ public class Client implements Runnable{
                         String typeId = (String) data[1];
                         Integer id = (Integer) data[2];
 
-                        Entity entity = EntityFactory.createEntity(typeId);
+                        Entity entity = EntityFactory.createEntity(typeId, -100.0f, -100.0f);
                         if (entity == null) return;
                         entity.setId(id);
                         game.entityManager.addEntity(entity);
@@ -57,6 +57,7 @@ public class Client implements Runnable{
                         Float x = (Float) data[3];
                         Float y = (Float) data[4];
 
+                        if (!typeID.equals("player")) System.out.println("CLIENT Moviendo entidad " + typeID + " " + id + " a " + x + " " + y);
                         game.entityManager.setPosEntity(typeID, id, x, y);
                     }
                     case "disconnect" -> {

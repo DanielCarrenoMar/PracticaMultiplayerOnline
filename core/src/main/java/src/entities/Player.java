@@ -6,12 +6,10 @@ public class Player extends  Entity {
     private Float previousX;
     private Float previousY;
 
-    public Player() {
-        super(Main.playerTexture,"player", "None123", 100, 100, 16, 16, 1.0f);
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public Player(Float X, Float Y) {
+        super("player", "None123", 100, 100, 16, 16, 1.0f);
+        setSprite(Main.playerTexture);
+        setPos(X, Y);
     }
 
     @Override

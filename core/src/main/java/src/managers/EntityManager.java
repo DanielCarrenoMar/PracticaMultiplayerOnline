@@ -1,6 +1,7 @@
 package src.managers;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import src.entities.*;
 
 import java.util.ArrayList;
@@ -12,11 +13,22 @@ public class EntityManager {
     }
 
     public void addEntity(Entity entity) {
+        if (entity == null) {
+            System.out.println("No se puede agregar entidad Null");
+            return;
+        }
+        entity.id = entities.size();
         entities.add(entity);
     }
 
     public void removeEntity(String typeId,Integer id) {
-        entities.removeIf(entity -> entity.id.equals(id) && entity.typeId.equals(typeId));
+        entities.removeIf(entity -> entity.id.equals(id) && entity.getTypeId().equals(typeId));
+    }
+
+    public void updateEntities(float delta, StructManager colision) {
+        for (Entity entity : entities) {
+            entity.update(delta, colision);
+        }
     }
 
     public void drawEntities(SpriteBatch batch) {
@@ -27,7 +39,7 @@ public class EntityManager {
 
     public void setPosEntity(String typeId, Integer id , Float X, Float Y) {
         for (Entity entity : entities) {
-            if (entity.id.equals(id) && entity.typeId.equals(typeId)) {
+            if (entity.id.equals(id) && entity.getTypeId().equals(typeId)) {
                 entity.setPos(X, Y);
             }
         }
@@ -38,5 +50,18 @@ public class EntityManager {
             return null;
         }
         return entities;
+    }
+
+    public Entity closestToRadius(Float X, Float Y, Integer radius) {
+        float minDistance = Float.MAX_VALUE;
+        Entity closestEntity = null;
+        for (Entity entity : entities) {
+            float distance = (float) Math.sqrt(Math.pow(entity.X - X, 2) + Math.pow(entity.Y - Y, 2));
+            if (distance < minDistance && distance < radius) {
+                minDistance = distance;
+                closestEntity = entity;
+            }
+        }
+        return closestEntity;
     }
 }

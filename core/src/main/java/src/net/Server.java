@@ -98,23 +98,22 @@ public class Server implements Runnable{
                             String name = (String) data[1];
                             Float X = (Float) data[2];
                             Float Y = (Float) data[3];
-                            Player newPlayer = (Player) EntityFactory.createEntity("player");
+                            Player newPlayer = (Player) EntityFactory.createEntity("player", X, Y);
                             if (newPlayer == null) return;
                             newPlayer.setName(name);
                             newPlayer.setId(id);
-                            newPlayer.setPos(X, Y);
 
                             ArrayList<Entity> entities = entityManager.getEntities();
                             if (entities != null) {
                                 for (Entity entity : entityManager.getEntities()) {
-                                    System.out.println("SERVER Enviando entidad + " + entity.typeId + " " + entity.id);
-                                    send(Packet.newEntity(entity.typeId, entity.id));
-                                    send(Packet.setPosEntity(entity.typeId, entity.id, entity.X, entity.Y));
+                                    System.out.println("SERVER Enviando entidad + " + entity.getTypeId() + " " + entity.id);
+                                    send(Packet.newEntity(entity.getTypeId(), entity.id));
+                                    send(Packet.setPosEntity(entity.getTypeId(), entity.id, entity.X, entity.Y));
                                 }
                             }
 
-                            sendAll(Packet.newEntity(newPlayer.typeId, newPlayer.id), id);
-                            sendAll(Packet.setPosEntity(newPlayer.typeId, newPlayer.id, newPlayer.X, newPlayer.Y), id);
+                            sendAll(Packet.newEntity(newPlayer.getTypeId(), newPlayer.id), id);
+                            sendAll(Packet.setPosEntity(newPlayer.getTypeId(), newPlayer.id, newPlayer.X, newPlayer.Y), id);
                             entityManager.addEntity(newPlayer);
                         }
                         case "disconnect" -> {
@@ -123,6 +122,20 @@ public class Server implements Runnable{
                             entityManager.removeEntity("player", id);
                             running = false;
                             users.remove(this);
+                        }
+                        case "newEntity" -> {
+                            String typeId = (String) data[1];
+                            Integer id = (Integer) data[2];
+                            Float X = (Float) data[3];
+                            Float Y = (Float) data[4];
+
+                            Entity entity = EntityFactory.createEntity(typeId, X, Y);
+                            if (entity == null) return;
+                            entity.setId(id);
+                            entityManager.addEntity(entity);
+
+                            sendAll(Packet.newEntity(typeId, id), id);
+                            sendAll(Packet.setPosEntity(typeId, id, X, Y), id);
                         }
                         case "setPosEntity" -> {
                             String typeId = (String) data[1];

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="48" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="37">
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="48" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="45">
  <tileset firstgid="1" source="../tilemaps/mundo.tsx"/>
  <layer id="2" name="background" width="48" height="24">
   <data encoding="csv">
@@ -30,13 +30,13 @@
 </data>
  </layer>
  <objectgroup id="3" name="objects">
-  <object id="1" name="player" x="286.727" y="256.955" width="16" height="16"/>
+  <object id="1" name="npc_mage" x="224.272" y="237.546" width="16" height="16"/>
+  <object id="37" name="player" x="286.5" y="256.5" width="16" height="16"/>
  </objectgroup>
  <objectgroup id="4" name="colision">
   <object id="5" x="400.591" y="256.273" width="63.0909" height="31.4546"/>
   <object id="7" x="256.273" y="208.098" width="79.4545" height="31.6364"/>
   <object id="9" x="351.977" y="176.295" width="48" height="32"/>
-  <object id="10" x="270.03" y="192.364" width="47.2727" height="15.2728"/>
   <object id="12" x="128.025" y="144.125" width="64" height="32"/>
   <object id="13" x="208.125" y="143.875" width="64" height="32"/>
   <object id="14" x="240.091" y="15.9849" width="32" height="127.818"/>
@@ -62,5 +62,12 @@
   <object id="34" x="399.5" y="128.25" width="48" height="16"/>
   <object id="35" x="335.5" y="128" width="48" height="16"/>
   <object id="36" x="336" y="16" width="112" height="16"/>
+  <object id="38" x="272.125" y="192.063" width="48" height="16"/>
+  <object id="39" x="223.939" y="256.152" width="16" height="16"/>
+  <object id="40" x="384.409" y="271.642" width="16" height="16"/>
+  <object id="41" x="255.937" y="320" width="16" height="16"/>
+  <object id="42" x="303.955" y="335.784" width="16" height="16"/>
+  <object id="43" x="339.636" y="283.636" width="16" height="16"/>
+  <object id="44" x="340.182" y="237.636" width="16" height="16"/>
  </objectgroup>
 </map>

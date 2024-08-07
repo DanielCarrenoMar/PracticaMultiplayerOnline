@@ -4,11 +4,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import src.app.Main;
+import src.managers.StructManager;
 
 import java.io.Serializable;
 
 public class Entity implements Serializable {
-    public String typeId, name;
+    private String typeId, name;
     public Integer id = -1;
     private Integer health, maxHealth;
     public Float X = 0.0f;
@@ -18,11 +20,14 @@ public class Entity implements Serializable {
     private Integer height = 32;
     private Integer width = 32;
     public Rectangle collisionShape;
+    private Boolean lock = false;
 
     private Sprite sprite;
 
-    public Entity(Texture texture,String typeId, String name, Integer health, Integer maxHealth, Integer height, Integer width, Float speed) {
-        this.sprite = new Sprite(texture);
+    public Float time = 0.0f;
+
+    public Entity(String typeId, String name, Integer health, Integer maxHealth, Integer height, Integer width, Float speed) {
+        this.sprite = new Sprite(Main.playerTexture);
         sprite.setBounds(X, Y, width, height);
         this.typeId = typeId;
         this.name = name;
@@ -32,6 +37,38 @@ public class Entity implements Serializable {
         this.width = width;
         this.speed = speed;
         this.collisionShape = new Rectangle(X+5, Y+5, width-10, height-10);
+    }
+
+    public void setLock(Boolean lock) {
+        this.lock = lock;
+    }
+    public Boolean getLock() {
+        return lock;
+    }
+
+    public String getTypeId() {
+        return typeId;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setTypeId(String typeId) {
+        this.typeId = typeId;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getWidth() {
+        return width;
+    }
+    public Integer getHeight() {
+        return height;
+    }
+
+    public void setSprite(Texture texture) {
+        this.sprite = new Sprite(texture);
+        sprite.setBounds(X, Y, width, height);
     }
 
     public void setId(Integer id) {
@@ -72,6 +109,8 @@ public class Entity implements Serializable {
         batch.draw(sprite, X, Y, width, height);
         batch.end();
     }
+
+    public void update(float delta, StructManager colision){}
 
     public void dispose() {
         sprite.getTexture().dispose();

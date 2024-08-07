@@ -7,6 +7,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import src.entities.EntityFactory;
 import src.pages.GameScreen;
 import src.struct.Struct;
 
@@ -39,8 +40,11 @@ public class TiledmapManager {
     public void parsedEntityMap(MapObjects objects) {
 
         for (MapObject object : objects) {
-            if (object.getName().equals("player")) {
+            String type = object.getName();
+            if (type.equals("player")){
                 createMainPlayer(object);
+            }else{
+                createEntity(type, object);
             }
         }
 
@@ -50,6 +54,12 @@ public class TiledmapManager {
         Float X = (Float) object.getProperties().get("x");
         Float Y = (Float) object.getProperties().get("y");
         game.createMainPlayer( X, Y);
+    }
+
+    public void createEntity(String type, MapObject object) {
+        Float X = (Float) object.getProperties().get("x");
+        Float Y = (Float) object.getProperties().get("y");
+        game.entityManager.addEntity(EntityFactory.createEntity(type, X, Y));
     }
 
     public void dispose() {

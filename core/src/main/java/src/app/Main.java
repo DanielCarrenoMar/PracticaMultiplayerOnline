@@ -23,13 +23,15 @@ public class Main extends Game {
     private Screen[] pages;
 
     public static Texture playerTexture;
+    public static Texture mageTexture;
 
     @Override
     public void create() {
         Gdx.graphics.setWindowedMode(1080, 720);
-        Gdx.graphics.setTitle("CubiTz");
+        Gdx.graphics.setTitle("CubiTzCrossing");
 
         Main.playerTexture = new Texture("sprites/player/playerState.png");
+        Main.mageTexture = new Texture("sprites/mage.png");
 
         shapeRenderer = new ShapeRenderer();
         batch = new SpriteBatch();
