@@ -44,8 +44,9 @@ public class GameScreen implements Screen {
     private final Label label;
     private final Label dialog;
     private final Dialog texBox;
+    private Float tickTime = 0.0f;
 
-    private Player mainPlayer;
+    public Player mainPlayer;
     private String namePlayer = "Daniel";
 
     private Client client = null;
@@ -96,6 +97,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        tickTime += delta;
         keyHandler();
         checkCollision();
         ScreenUtils.clear(ConvertColor.colorFromHexString("FF472d3c"));
@@ -112,14 +114,15 @@ public class GameScreen implements Screen {
         main.stage.act();
         main.stage.draw();
 
-        entityManager.updateEntities(delta, structManager);
+        if (client != null) client.send(Packet.setPosPlayer(mainPlayer.X, mainPlayer.Y));
 
-        if (!isServer) return;
+        if (!isServer || tickTime < 0.1f) return;
+        server.sendAll(Packet.setPosEntity(mainPlayer.getTypeId(), mainPlayer.id, mainPlayer.X, mainPlayer.Y),-1);
+        entityManager.updateEntities(delta, structManager);
         ArrayList<Entity> entities = entityManager.getEntities();
         if (entities == null) return;
         for (Entity entity : entities) {
-            if (entity.getTypeId().equals("player")) continue;
-            client.send(Packet.setPosEntity(entity.getTypeId(), entity.id, entity.X, entity.Y));
+            server.sendAll(Packet.setPosEntity(entity.getTypeId(), entity.id, entity.X, entity.Y), -1);
         }
     }
 
@@ -146,13 +149,14 @@ public class GameScreen implements Screen {
         mainPlayer.dispose();
 
         if (server != null) server.close();
-        if (client != null) client.close();
-        pool.close();
+        if (client != null && client.isRunning()) client.close();
+        pool.shutdown();
     }
 
     public void createMainPlayer( Float X, Float Y) {
         mainPlayer = (Player) EntityFactory.createEntity("player",X, Y);
         if (mainPlayer == null) return;
+        mainPlayer.setId(0);
         mainPlayer.setName(namePlayer);
     }
 
@@ -163,6 +167,8 @@ public class GameScreen implements Screen {
                 if (entity.getTypeId().startsWith("npc")){
                     Npc npc = (Npc) entity;
                     npc.startDialog(mainPlayer, dialog, texBox);
+                    if (client != null) {
+                        client.send(Packet.changeLockEntity(npc.getTypeId(), npc.id, npc.getLock()));}
                 }
             }
         }
@@ -175,19 +181,15 @@ public class GameScreen implements Screen {
 
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
             mainPlayer.move(180.);
-            playerMoveSend();
         } else
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
             mainPlayer.move(0.);
-            playerMoveSend();
         } else
         if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W)) {
             mainPlayer.move(90.);
-            playerMoveSend();
         } else
         if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
             mainPlayer.move(270.);
-            playerMoveSend();
         }
 
     }
@@ -207,29 +209,19 @@ public class GameScreen implements Screen {
     }
 
     public void connectToServer(String ip, Integer port) {
+        if (client != null) return;
         client = new Client(this, ip, port);
         pool.execute(client);
         client.send(Packet.connect(mainPlayer.getName(), mainPlayer.X, mainPlayer.Y));
+        entityManager.removeAll();
     }
 
     public void startServer() {
         if (client != null) return;
         if (server != null) return;
-
-        server = new Server(1234);
-        pool.execute(server);
-        connectToServer("localhost", 1234);
-        ArrayList<Entity> entities = entityManager.getEntities();
-        if (entities != null) {
-            for (Entity entity : entityManager.getEntities()) {
-                client.send(Packet.newEntity(entity.getTypeId(), entity.id));
-                client.send(Packet.setPosEntity(entity.getTypeId(), entity.id, entity.X, entity.Y));
-            }
-        }
         isServer = true;
-    }
-
-    public void playerMoveSend() {
-        if (client != null && client.isRunning()) client.send(Packet.setPosEntity(mainPlayer.getTypeId(), mainPlayer.id, mainPlayer.X, mainPlayer.Y));
+        server = new Server(1234, this);
+        pool.execute(server);
+        //entityManager.addEntityNoId(mainPlayer);
     }
 }

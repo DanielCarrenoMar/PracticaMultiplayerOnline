@@ -1,7 +1,6 @@
 package src.managers;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Rectangle;
 import src.entities.*;
 
 import java.util.ArrayList;
@@ -12,12 +11,23 @@ public class EntityManager {
     public EntityManager() {
     }
 
+    public void removeAll() {
+        entities.clear();
+    }
+
     public void addEntity(Entity entity) {
         if (entity == null) {
             System.out.println("No se puede agregar entidad Null");
             return;
         }
-        entity.id = entities.size();
+        entity.id = entities.size()+1;
+        entities.add(entity);
+    }
+    public void addEntityNoId(Entity entity) {
+        if (entity == null) {
+            System.out.println("No se puede agregar entidad Null");
+            return;
+        }
         entities.add(entity);
     }
 

@@ -9,8 +9,12 @@ public class Packet{
         return new Object[] {"connect", name, X, Y};
     }
 
-    public static Object[] newEntity (String typeId, Integer id) {
-        return new Object[] {"newEntity", typeId, id};
+    public static Object[] setPosPlayer ( Float X, Float Y) {
+        return new Object[] {"setPosPlayer", X, Y};
+    }
+
+    public static Object[] newEntity (String typeId, Integer id, String name) {
+        return new Object[] {"newEntity", typeId, id, name};
     }
 
     public static Object[] setPosEntity (String typeId,Integer id, Float X, Float Y) {
@@ -23,5 +27,9 @@ public class Packet{
 
     public static  Object[] serverClose() {
         return new Object[] {"serverClose"};
+    }
+
+    public static Object[] changeLockEntity(String typeId,Integer id, Boolean lock) {
+        return new Object[] {"changeLockEntity", typeId, id, lock};
     }
 }

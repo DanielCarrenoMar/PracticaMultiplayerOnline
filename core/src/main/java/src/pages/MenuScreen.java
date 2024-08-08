@@ -4,6 +4,7 @@ import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import src.app.Main;
@@ -15,6 +16,7 @@ public class MenuScreen implements Screen {
     private Table table = new Table();
     private TextButton playButton;
     private TextButton playConnectButton;
+    private TextField ipField;
 
     public MenuScreen(Main main) {
         this.main = main;
@@ -28,19 +30,29 @@ public class MenuScreen implements Screen {
             }
         });
 
+        ipField = new TextField("localhost:1234", main.skin);
+        ipField.setMaxLength(45);
+
         playConnectButton = new TextButton("Conectarse a servidor", main.skin);
         playConnectButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
                 GameScreen page = (GameScreen) main.getPage("GameScreen");
-                page.connectToServer("localhost", 1234);
+                String[] connet = new String[]{"localhost", "1234"};
+                if (ipField.getText().contains(":")) {
+                    connet = ipField.getText().split(":");
+                }
+                page.connectToServer(connet[0], Integer.parseInt(connet[1]));
                 main.changePage(2);
             }
         });
 
+
         table.add(playButton).width(300).height(75).expandX();
         table.row();
         table.add(playConnectButton).width(300).height(75).expandX();
+        table.row();
+        table.add(ipField).width(300).height(75).expandX();
 
         main.stage.addActor(table);
     }

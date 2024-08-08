@@ -4,6 +4,7 @@ import src.entities.Entity;
 import src.entities.EntityFactory;
 import src.entities.Player;
 import src.managers.EntityManager;
+import src.pages.GameScreen;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -23,11 +24,12 @@ public class Server implements Runnable{
     private ServerSocket serverSocket;
     private Boolean running = true;
     private final ExecutorService pool = Executors.newFixedThreadPool(10);
+    private final GameScreen game;
 
-    public static EntityManager entityManager = new EntityManager();
     private static final ArrayList<User> users = new ArrayList<User>();
 
-    public Server(Integer port) {
+    public Server(Integer port, GameScreen game) {
+        this.game = game;
         this.port = port;
         try {
             this.serverSocket = new ServerSocket(port);
@@ -43,7 +45,7 @@ public class Server implements Runnable{
         try{
             while (running) {
                 Socket clientSocket = serverSocket.accept();
-                User newUser = new User(clientSocket, users.size());
+                User newUser = new User(clientSocket, users.size()+1);
                 pool.execute(newUser);
                 users.add(newUser);
             }
@@ -53,8 +55,9 @@ public class Server implements Runnable{
     }
 
     public void sendAll(Object[] data, Integer id){
+        if (users.isEmpty()) return;
         for (User user : users) {
-            if (user.id.equals(id)) continue;
+            if (!user.running || user.id.equals(id)) continue;
             user.send(data);
         }
     }
@@ -70,13 +73,13 @@ public class Server implements Runnable{
         } catch (IOException e) {
             logger.log(Level.WARNING, "Falla al cerrar el servidor", e);
         }
-        pool.close();
+        pool.shutdown();
     }
 
     private class User implements Runnable{
         private final Socket socket;
         private final Integer id;
-        private Boolean running = true;
+        private Boolean running = false;
         private ObjectOutputStream out;
 
         private User(Socket socket, Integer id) {
@@ -90,9 +93,11 @@ public class Server implements Runnable{
             try {
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                 out = new ObjectOutputStream(socket.getOutputStream());
+                running = true;
                 while (running) {
                     Object[] data = (Object[]) in.readObject();
                     String type = (String) data[0];
+                    //System.out.println("SERVER Recibido " + type);
                     switch (type) {
                         case "connect" -> {
                             String name = (String) data[1];
@@ -103,47 +108,46 @@ public class Server implements Runnable{
                             newPlayer.setName(name);
                             newPlayer.setId(id);
 
-                            ArrayList<Entity> entities = entityManager.getEntities();
+                            ArrayList<Entity> entities = game.entityManager.getEntities();
                             if (entities != null) {
-                                for (Entity entity : entityManager.getEntities()) {
+                                for (Entity entity : entities) {
                                     System.out.println("SERVER Enviando entidad + " + entity.getTypeId() + " " + entity.id);
-                                    send(Packet.newEntity(entity.getTypeId(), entity.id));
+                                    send(Packet.newEntity(entity.getTypeId(), entity.id, entity.getName()));
                                     send(Packet.setPosEntity(entity.getTypeId(), entity.id, entity.X, entity.Y));
                                 }
                             }
+                            send(Packet.newEntity(game.mainPlayer.getTypeId(), game.mainPlayer.id, game.mainPlayer.getName()));
 
-                            sendAll(Packet.newEntity(newPlayer.getTypeId(), newPlayer.id), id);
+                            sendAll(Packet.newEntity(newPlayer.getTypeId(), newPlayer.id, newPlayer.getName()), id);
                             sendAll(Packet.setPosEntity(newPlayer.getTypeId(), newPlayer.id, newPlayer.X, newPlayer.Y), id);
-                            entityManager.addEntity(newPlayer);
+                            game.entityManager.addEntityNoId(newPlayer);
                         }
                         case "disconnect" -> {
                             System.out.println("SERVER Usuario desconectado " + id);
                             sendAll(Packet.disconnect(id), id);
-                            entityManager.removeEntity("player", id);
+                            game.entityManager.removeEntity("player", id);
                             running = false;
                             users.remove(this);
                         }
-                        case "newEntity" -> {
-                            String typeId = (String) data[1];
-                            Integer id = (Integer) data[2];
-                            Float X = (Float) data[3];
-                            Float Y = (Float) data[4];
+                        case "setPosPlayer" -> {
+                            Float X = (Float) data[1];
+                            Float Y = (Float) data[2];
+                            game.entityManager.setPosEntity("player", id, X, Y);
 
-                            Entity entity = EntityFactory.createEntity(typeId, X, Y);
-                            if (entity == null) return;
-                            entity.setId(id);
-                            entityManager.addEntity(entity);
-
-                            sendAll(Packet.newEntity(typeId, id), id);
-                            sendAll(Packet.setPosEntity(typeId, id, X, Y), id);
+                            sendAll(Packet.setPosEntity("player", id, X, Y), id);
                         }
-                        case "setPosEntity" -> {
-                            String typeId = (String) data[1];
-                            Float X = (Float) data[3];
-                            Float Y = (Float) data[4];
-                            entityManager.setPosEntity(typeId, id, X, Y);
-
-                            sendAll(Packet.setPosEntity(typeId, id, X, Y), id);
+                        case "changeLockEntity" ->{
+                            String typeID = (String) data[1];
+                            Integer id = (Integer) data[2];
+                            Boolean lock = (Boolean) data[3];
+                            ArrayList<Entity> entities = game.entityManager.getEntities();
+                            if (entities != null) {
+                                for (Entity entity : entities) {
+                                    if (entity.id.equals(id) && entity.getTypeId().equals(typeID)) {
+                                        entity.setLock(lock);
+                                    }
+                                }
+                            }
                         }
                     }
 

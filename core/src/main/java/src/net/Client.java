@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,11 +46,15 @@ public class Client implements Runnable{
                     case "newEntity" -> {
                         String typeId = (String) data[1];
                         Integer id = (Integer) data[2];
+                        String name = (String) data[3];
 
+                        System.out.println("CLIENT Nueva entidad creada" +
+                            " " + typeId + " " + id + " " + name);
                         Entity entity = EntityFactory.createEntity(typeId, -100.0f, -100.0f);
                         if (entity == null) return;
                         entity.setId(id);
-                        game.entityManager.addEntity(entity);
+                        entity.setName(name);
+                        game.entityManager.addEntityNoId(entity);
                     }
                     case "setPosEntity" -> {
                         String typeID = (String) data[1];
@@ -57,7 +62,6 @@ public class Client implements Runnable{
                         Float x = (Float) data[3];
                         Float y = (Float) data[4];
 
-                        if (!typeID.equals("player")) System.out.println("CLIENT Moviendo entidad " + typeID + " " + id + " a " + x + " " + y);
                         game.entityManager.setPosEntity(typeID, id, x, y);
                     }
                     case "disconnect" -> {
@@ -69,6 +73,7 @@ public class Client implements Runnable{
                         System.out.println("CLIENT Servidor cerrado");
                         running = false;
                         socket.close();
+                        game.entityManager.removeAll();
                     }
                 }
 
@@ -79,6 +84,7 @@ public class Client implements Runnable{
     }
 
     public void send(Object[] data) {
+        if (!running) return;
         try {
             out.writeObject(data);
         } catch (IOException e) {
