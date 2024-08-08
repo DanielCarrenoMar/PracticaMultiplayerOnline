@@ -1,9 +1,9 @@
 package src.pages;
 
-
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import src.app.Main;
 import src.entities.Npc;
@@ -29,6 +29,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,12 +43,13 @@ public class GameScreen implements Screen {
 
     private final TextButton serverButton;
     private final Label label;
+    private final Label tutorial;
     private final Label dialog;
-    private final Dialog texBox;
+    private final Container<Label> textBox = new Container<>();
     private Float tickTime = 0.0f;
 
     public Player mainPlayer;
-    private String namePlayer = "Daniel";
+    private String namePlayer = "Jugador principal";
 
     private Client client = null;
     private Boolean isServer = false;
@@ -65,6 +67,10 @@ public class GameScreen implements Screen {
         label.setBounds(100, 500, 300, 100);
         label.setVisible(false);
 
+        tutorial = new Label("Presiona E para hablar con los NPC.\nESC para abrir el menu", main.skin);
+        tutorial.setBounds(10, 640, 600, 100);
+        tutorial.setVisible(false);
+
         this.serverButton = new TextButton("Server", main.skin);
         serverButton.setBounds(100, 400, 300, 100);
         serverButton.addListener(new ClickListener(
@@ -77,22 +83,27 @@ public class GameScreen implements Screen {
         serverButton.setVisible(false);
 
         dialog = new Label("Hola", main.skin);
-        dialog.setBounds(50, 0, 1280, 200);
-        dialog.setFontScale(3);
+        dialog.setBounds(0, 0, 500, 200);
+        dialog.setFontScale(2.5f);
         dialog.setVisible(false);
+        textBox.setActor(dialog);
 
-        texBox = new Dialog("Dialogo", main.skin);
-        texBox.setBounds(0, 0, 1280, 200);
-        texBox.setVisible(false);
+        textBox.setBounds(0, 0, 1280, 200);
+        textBox.setColor(ConvertColor.colorFromHexString("FF16151D"));
+        textBox.setBackground(main.skin.getDrawable("progress-bar-square-knob"));
+        textBox.left();
+        textBox.padLeft(20);
+        textBox.setVisible(false);
 
         main.stage.addActor(serverButton);
+        main.stage.addActor(tutorial);
         main.stage.addActor(label);
-        main.stage.addActor(texBox);
-        main.stage.addActor(dialog);
+        main.stage.addActor(textBox);
     }
 
-    @Override
+        @Override
     public void show() {
+            tutorial.setVisible(true);
     }
 
     @Override
@@ -116,10 +127,10 @@ public class GameScreen implements Screen {
 
         if (client != null) client.send(Packet.setPosPlayer(mainPlayer.X, mainPlayer.Y));
 
+        if (client == null) entityManager.updateEntities(delta, structManager);
         if (!isServer || tickTime < 0.1f) return;
         server.sendAll(Packet.setPosEntity(mainPlayer.getTypeId(), mainPlayer.id, mainPlayer.X, mainPlayer.Y),-1);
-        entityManager.updateEntities(delta, structManager);
-        ArrayList<Entity> entities = entityManager.getEntities();
+        CopyOnWriteArrayList<Entity> entities = entityManager.getEntities();
         if (entities == null) return;
         for (Entity entity : entities) {
             server.sendAll(Packet.setPosEntity(entity.getTypeId(), entity.id, entity.X, entity.Y), -1);
@@ -140,6 +151,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void hide() {
+        tutorial.setVisible(false);
     }
 
     @Override
@@ -151,6 +163,15 @@ public class GameScreen implements Screen {
         if (server != null) server.close();
         if (client != null && client.isRunning()) client.close();
         pool.shutdown();
+    }
+
+    public void backToMenu() {
+        main.changePage(1);
+    }
+
+    public void resetGame() {
+        entityManager.removeAll();
+        tiledmapManager.reMakeMap();
     }
 
     public void createMainPlayer( Float X, Float Y) {
@@ -166,7 +187,7 @@ public class GameScreen implements Screen {
             if (entity != null){
                 if (entity.getTypeId().startsWith("npc")){
                     Npc npc = (Npc) entity;
-                    npc.startDialog(mainPlayer, dialog, texBox);
+                    npc.startDialog(mainPlayer, dialog, textBox);
                     if (client != null) {
                         client.send(Packet.changeLockEntity(npc.getTypeId(), npc.id, npc.getLock()));}
                 }
@@ -222,6 +243,8 @@ public class GameScreen implements Screen {
         isServer = true;
         server = new Server(1234, this);
         pool.execute(server);
+        serverButton.setColor(Color.GREEN);
+        tutorial.setText(tutorial.getText()+"\nSERVER ABIERTO EN PUERTO" + server.port);
         //entityManager.addEntityNoId(mainPlayer);
     }
 }

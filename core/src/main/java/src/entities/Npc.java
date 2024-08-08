@@ -1,8 +1,10 @@
 package src.entities;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import src.managers.StructManager;
@@ -12,7 +14,7 @@ import java.util.Random;
 public class Npc extends Entity{
     private final Random random = new Random();
     private final Vector2 goTo = new Vector2(0,0);
-    private String dialogText = "Hola";
+    private String dialogText = "Hola123";
 
     public Npc() {
         super("npc_", "None123", 100, 100, 16, 16, 0.4f);
@@ -26,10 +28,10 @@ public class Npc extends Entity{
     }
 
     public void setDialog(String dialog) {
-        this.dialogText = dialogText;
+        this.dialogText = dialog;
     }
 
-    public void startDialog(Player player, Label dialog, Dialog textBox) {
+    public void startDialog(Player player, Label dialog, Container<Label> textBox) {
         if (player.getLock()) {
             player.setLock(false);
             setLock(false);
@@ -40,7 +42,7 @@ public class Npc extends Entity{
 
         player.setLock(true);
         setLock(true);
-        dialog.setText(dialogText);
+        dialog.setText(getName() + ": " + dialogText);
         dialog.setVisible(true);
         textBox.setVisible(true);
     }

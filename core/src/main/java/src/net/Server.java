@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -22,11 +23,11 @@ public class Server implements Runnable{
     public Integer port;
     public String ip;
     private ServerSocket serverSocket;
-    private Boolean running = true;
+    private Boolean running = false;
     private final ExecutorService pool = Executors.newFixedThreadPool(10);
     private final GameScreen game;
 
-    private static final ArrayList<User> users = new ArrayList<User>();
+    private static final CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<User>();
 
     public Server(Integer port, GameScreen game) {
         this.game = game;
@@ -34,6 +35,7 @@ public class Server implements Runnable{
         try {
             this.serverSocket = new ServerSocket(port);
             this.ip = serverSocket.getInetAddress().getHostAddress();
+            running = true;
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Falla al crear el servidor en el puerto " + port, e);
         }
@@ -55,19 +57,22 @@ public class Server implements Runnable{
     }
 
     public void sendAll(Object[] data, Integer id){
-        if (users.isEmpty()) return;
-        for (User user : users) {
-            if (!user.running || user.id.equals(id)) continue;
-            user.send(data);
+        synchronized (users) {
+            for (User user : users) {
+                if (!user.running || user.id.equals(id)) continue;
+                user.send(data);
+            }
         }
     }
 
     public void close(){
         running = false;
         try {
-            for (User user : users) {
-                user.running = false;
-                user.send(Packet.serverClose());
+            synchronized (users) {
+                for (User user : users) {
+                    user.running = false;
+                    user.send(Packet.serverClose());
+                }
             }
             serverSocket.close();
         } catch (IOException e) {
@@ -85,6 +90,20 @@ public class Server implements Runnable{
         private User(Socket socket, Integer id) {
             this.socket = socket;
             this.id = id;
+        }
+
+        public void close(){
+            if (!running) return;
+            System.out.println("SERVER Usuario desconectado " + id);
+            sendAll(Packet.disconnect(id), id);
+            game.entityManager.removeEntity("player", id);
+            running = false;
+            users.remove(this);
+            try {
+                socket.close();
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Falla al cerrar el socket", e);
+            }
         }
 
         @Override
@@ -108,7 +127,7 @@ public class Server implements Runnable{
                             newPlayer.setName(name);
                             newPlayer.setId(id);
 
-                            ArrayList<Entity> entities = game.entityManager.getEntities();
+                            CopyOnWriteArrayList<Entity> entities = game.entityManager.getEntities();
                             if (entities != null) {
                                 for (Entity entity : entities) {
                                     System.out.println("SERVER Enviando entidad + " + entity.getTypeId() + " " + entity.id);
@@ -123,11 +142,7 @@ public class Server implements Runnable{
                             game.entityManager.addEntityNoId(newPlayer);
                         }
                         case "disconnect" -> {
-                            System.out.println("SERVER Usuario desconectado " + id);
-                            sendAll(Packet.disconnect(id), id);
-                            game.entityManager.removeEntity("player", id);
-                            running = false;
-                            users.remove(this);
+                            close();
                         }
                         case "setPosPlayer" -> {
                             Float X = (Float) data[1];
@@ -140,7 +155,7 @@ public class Server implements Runnable{
                             String typeID = (String) data[1];
                             Integer id = (Integer) data[2];
                             Boolean lock = (Boolean) data[3];
-                            ArrayList<Entity> entities = game.entityManager.getEntities();
+                            CopyOnWriteArrayList<Entity> entities = game.entityManager.getEntities();
                             if (entities != null) {
                                 for (Entity entity : entities) {
                                     if (entity.id.equals(id) && entity.getTypeId().equals(typeID)) {
@@ -156,6 +171,8 @@ public class Server implements Runnable{
                 logger.log(Level.WARNING, "SERVER Falla al leer/escribir mensaje", e);
             } catch (ClassNotFoundException e) {
                 logger.log(Level.WARNING, "SERVER Falla al leer/escribir mensaje (clase no encontrada)", e);
+            } finally {
+                close();
             }
         }
 
@@ -164,6 +181,7 @@ public class Server implements Runnable{
                 out.writeObject(data);
             } catch (IOException e) {
                 logger.log(Level.WARNING, "SERVER Falla al enviar mensaje", e);
+
             }
         }
     }

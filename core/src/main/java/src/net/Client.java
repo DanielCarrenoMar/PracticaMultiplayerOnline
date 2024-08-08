@@ -16,7 +16,7 @@ public class Client implements Runnable{
     private static final Logger logger = Logger.getLogger(Server.class.getName());
     public String ip;
     public Integer port;
-    private Boolean running = true;
+    private Boolean running = false;
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
@@ -30,6 +30,7 @@ public class Client implements Runnable{
             socket = new Socket(ip, port);
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
+            running = true;
         } catch (IOException e){
             logger.log(Level.WARNING, "CLIENT Falla al conectar al servidor", e);
         }
@@ -41,6 +42,10 @@ public class Client implements Runnable{
         try {
             while (running) {
                 Object[] data = (Object[]) in.readObject();
+                if (data.length > 1000) { // Example limit, adjust as needed
+                    logger.log(Level.WARNING, "CLIENT Datos recibidos demasiado grandes, ignorando");
+                    continue;
+                }
                 String type = (String) data[0];
                 switch (type) {
                     case "newEntity" -> {
@@ -74,12 +79,23 @@ public class Client implements Runnable{
                         running = false;
                         socket.close();
                         game.entityManager.removeAll();
+                        game.backToMenu();
                     }
                 }
 
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "CLIENT Falla al recibir paquetes", e);
+        } finally {
+            try {
+                if (running){
+                    running = false;
+                    send(Packet.disconnect(-1));
+                    socket.close();
+                }
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error cerrando recursos", e);
+            }
         }
     }
 

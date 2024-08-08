@@ -4,9 +4,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import src.entities.*;
 
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class EntityManager {
-    private final ArrayList<Entity> entities = new ArrayList<>();
+    private final CopyOnWriteArrayList<Entity> entities = new CopyOnWriteArrayList<>();
 
     public EntityManager() {
     }
@@ -42,8 +43,10 @@ public class EntityManager {
     }
 
     public void drawEntities(SpriteBatch batch) {
-        for (Entity entity : entities) {
-            entity.draw(batch);
+        synchronized (entities) {
+            for (Entity entity : entities) {
+                entity.draw(batch);
+            }
         }
     }
 
@@ -55,7 +58,7 @@ public class EntityManager {
         }
     }
 
-    public ArrayList<Entity> getEntities() {
+    public CopyOnWriteArrayList<Entity> getEntities() {
         if (entities.isEmpty()) {
             return null;
         }

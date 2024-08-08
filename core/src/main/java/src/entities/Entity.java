@@ -1,5 +1,6 @@
 package src.entities;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -21,6 +22,7 @@ public class Entity implements Serializable {
     private Integer width = 32;
     public Rectangle collisionShape;
     private Boolean lock = false;
+    private Color color = Color.WHITE;
 
     private Sprite sprite;
 
@@ -66,9 +68,19 @@ public class Entity implements Serializable {
         return height;
     }
 
+    public void setColor(Color color) {
+        this.color = color;
+        this.sprite.setColor(color);
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
     public void setSprite(Texture texture) {
         this.sprite = new Sprite(texture);
         sprite.setBounds(X, Y, width, height);
+        this.sprite.setColor(color);
     }
 
     public void setId(Integer id) {
@@ -106,6 +118,7 @@ public class Entity implements Serializable {
     public void draw(SpriteBatch batch) {
         if (sprite == null) return;
         batch.begin();
+        batch.setColor(color);
         batch.draw(sprite, X, Y, width, height);
         batch.end();
     }

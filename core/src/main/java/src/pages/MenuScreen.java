@@ -12,20 +12,20 @@ import src.app.Main;
 import com.badlogic.gdx.Screen;
 
 public class MenuScreen implements Screen {
-    private Main main;
-    private Table table = new Table();
-    private TextButton playButton;
-    private TextButton playConnectButton;
-    private TextField ipField;
+    private final Main main;
+    private final Table table = new Table();
+    private final TextField ipField;
 
     public MenuScreen(Main main) {
         this.main = main;
         table.setFillParent(true);
 
-        playButton = new TextButton("Play", main.skin);
+        TextButton playButton = new TextButton("Play", main.skin);
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                GameScreen page = (GameScreen) main.getPage("GameScreen");
+                page.resetGame();
                 main.changePage(2);
             }
         });
@@ -33,7 +33,7 @@ public class MenuScreen implements Screen {
         ipField = new TextField("localhost:1234", main.skin);
         ipField.setMaxLength(45);
 
-        playConnectButton = new TextButton("Conectarse a servidor", main.skin);
+        TextButton playConnectButton = new TextButton("Conectarse a servidor", main.skin);
         playConnectButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {

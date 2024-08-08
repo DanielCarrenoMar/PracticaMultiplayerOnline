@@ -65,4 +65,9 @@ public class TiledmapManager {
     public void dispose() {
         tiledmap.dispose();
     }
+
+    public void reMakeMap() {
+        parsedEntityMap(tiledmap.getLayers().get("objects").getObjects());
+        parsedColisionMap(tiledmap.getLayers().get("colision").getObjects());
+    }
 }

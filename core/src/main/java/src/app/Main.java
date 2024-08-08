@@ -24,6 +24,10 @@ public class Main extends Game {
 
     public static Texture playerTexture;
     public static Texture mageTexture;
+    public static Texture joseTexture;
+    public static Texture juanTexture;
+    public static Texture julioTexture;
+    public static Texture danielTexture;
 
     @Override
     public void create() {
@@ -32,6 +36,10 @@ public class Main extends Game {
 
         Main.playerTexture = new Texture("sprites/player/playerState.png");
         Main.mageTexture = new Texture("sprites/mage.png");
+        Main.juanTexture = new Texture("sprites/juan.png");
+        Main.julioTexture = new Texture("sprites/julio.png");
+        Main.joseTexture = new Texture("sprites/jose.png");
+        Main.danielTexture = new Texture("sprites/daniel.png");
 
         shapeRenderer = new ShapeRenderer();
         batch = new SpriteBatch();
