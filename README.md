@@ -10,12 +10,13 @@ Contruida con libGDX tiene capacidad de hasta 10 jugadores en simultaneo. Puedes
 ![juego](https://github.com/user-attachments/assets/5f97ef22-8417-4555-8711-376b874d2d27)
 
 ## Características ⭐
-- Soporte de hasta 10 jugadores conectados
-- Opccion para hablar con NPCS
+- Soporte de hasta 10 jugadores conectados.
+- Opccion para hablar con NPCS.
 
 ## Controles ⚡
 - W A S D o flechas.
 - Escape para abrir el menu.
+- E para hablar con los NPCS.
 
 ## Tecnologias Utilizadas 📚
 - LibGDX
