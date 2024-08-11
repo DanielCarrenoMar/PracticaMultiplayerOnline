@@ -7,7 +7,7 @@ import src.utils.ConvertColor;
 public class JulioNpc extends Npc {
     public JulioNpc(Float X, Float Y) {
         init(Main.julioTexture, "julio", "Julio", X, Y);
-        this.setColor(ConvertColor.colorFromHexString("FFCFCFCF"));
-        setDialog("Me persigen los militares");
+        this.setColor(Color.BLACK);
+        setDialog("Recuerda aventurero, decir Nah i'd\n win antes de una pelea es como declarar tu derrota.\n(Me persigen los militares)");
     }
 }
