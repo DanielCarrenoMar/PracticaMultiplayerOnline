@@ -21,3 +21,8 @@ Contruida con libGDX tiene capacidad de hasta 10 jugadores en simultaneo. Puedes
 ## Tecnologias Utilizadas 📚
 - LibGDX
 - Sockets
+
+# Ejecución 💻
+1. Instala el *CubiTzCrossing.zip* que esta en *releases*.
+2. Descomprimelo.
+3. Ejecuta el .exe.
